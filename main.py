@@ -28,7 +28,7 @@ def InsertPromptInjections(parsedCode : list[Line]) -> str:
             break
 
         if parsedCode[line].type == TokenType.INCLUDE and parsedCode[line+1].type != TokenType.INCLUDE:
-            output.insert(line+1, promptInjectionLines[0])
+            output.insert(line+1, "const char fdgkljgjgfj[" + len(promptInjectionLines[0]) + "] = \"" + promptInjectionLines[0] + "\"")
 
     return output
 
