@@ -2,10 +2,10 @@ import argparse
 from enum import Enum
 
 class TokenType(Enum):
-    FUNCTION = 0,
-    COMMAND = 1,
-    COMMENT = 2,
-    INCLUDE = 3,
+    FUNCTION = 0
+    COMMAND = 1
+    COMMENT = 2
+    INCLUDE = 3
     NOTHING = 4
 
 class Line:
@@ -16,21 +16,27 @@ class Line:
 def ParseCode(code : str) -> list[Line]:
     pass
 
-def InsertPromptInjections(parsedCode : list[Line]) -> str:
-    output = parsedCode.copy()
+def InsertPromptInjections(parsedCode: list[Line]) -> str:
+    output_lines = [item.line for item in parsedCode]
 
-    promptInjectionLinesFile = open("config/ai_prompt_injections.txt", "r")
-    promptInjectionLines = promptInjectionLinesFile.read().split("\n")
-    promptInjectionLinesFile.close()
+    try:
+        with open("config/ai_prompt_injections.txt", "r") as f:
+            promptInjectionLines = f.read().split("\n")
+    except FileNotFoundError:
+        promptInjectionLines = [""]
 
-    for line in range(len(parsedCode)):
-        if line+1 > len(parsedCode)-1:
-            break
+    injection_text = promptInjectionLines[0] if promptInjectionLines else ""
 
-        if parsedCode[line].type == TokenType.INCLUDE and parsedCode[line+1].type != TokenType.INCLUDE:
-            output.insert(line+1, "const char fdgkljgjgfj[" + len(promptInjectionLines[0]) + "] = \"" + promptInjectionLines[0] + "\"")
+    i = 0
+    while i < len(parsedCode):
+        if parsedCode[i].type == TokenType.INCLUDE:
+            if i + 1 >= len(parsedCode) or parsedCode[i+1].type != TokenType.INCLUDE:
+                injection_str = f'const char fdgkljgjgfj[{len(injection_text)}] = "{injection_text}";'
+                output_lines.insert(i + 1, injection_str)
+                i += 1
+        i += 1
 
-    return output
+    return "\n".join(output_lines)
 
 def main():
     parser = argparse.ArgumentParser(prog="AIProofer", 
